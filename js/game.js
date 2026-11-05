@@ -133,6 +133,80 @@ class NumberQuestGame {
         this.loadQuestion();
     }
 
+    startMultiplayerMatch(roomCode, isHost) {
+        this.mode = "multiplayer";
+        this.isMultiplayer = true;
+        this.score = 0;
+        this.qIndex = 0;
+        this.lives = 3;
+        this.streak = 0;
+        this.realmQuestions = [...QUESTIONS_DATABASE].sort(() => Math.random() - 0.5).slice(0, 10);
+
+        if (this.elRealmTitle) this.elRealmTitle.textContent = `Duel Room: ${roomCode}`;
+        if (this.elRealmIcon) this.elRealmIcon.textContent = "⚔️";
+
+        const mpLiveBar = document.getElementById("multiplayer-live-bar");
+        if (mpLiveBar) mpLiveBar.classList.remove("hidden");
+
+        this.closeAllModals();
+        this.showScreen("screen-game");
+        this.loadQuestion();
+
+        if (window.multiplayerManager) {
+            window.multiplayerManager.updateProgress(0, 0, 3);
+            window.multiplayerManager.updateLiveInGameLeaderboard();
+        }
+    }
+
+    renderLiveMultiplayerBar(players) {
+        const barEl = document.getElementById("multiplayer-live-bar-content");
+        if (!barEl) return;
+        barEl.innerHTML = "";
+        players.forEach((p, idx) => {
+            const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+            const isMe = p.player_name === this.playerName;
+            const tag = document.createElement("div");
+            tag.className = `inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold ${isMe ? 'bg-indigo-600/90 text-white ring-1 ring-indigo-300' : 'bg-slate-800/80 text-slate-300'}`;
+            tag.innerHTML = `<span>${medal}</span> <span>${p.player_name}:</span> <span class="text-amber-300 font-bold">${p.score}</span>`;
+            barEl.appendChild(tag);
+        });
+    }
+
+    async loadCloudLeaderboard() {
+        const listEl = document.getElementById("leaderboard-list");
+        if (!listEl) return;
+        listEl.innerHTML = '<div class="text-center py-6 text-xs text-slate-400 animate-pulse">Memuat Peringkat Cloud Supabase...</div>';
+
+        if (window.multiplayerManager) {
+            const cloudData = await window.multiplayerManager.fetchGlobalLeaderboard();
+            if (cloudData && cloudData.length > 0) {
+                listEl.innerHTML = "";
+                cloudData.forEach((item, idx) => {
+                    const rankIcon = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+                    const row = document.createElement("div");
+                    row.className = `flex items-center justify-between p-3 rounded-xl border ${idx === 0 ? "bg-amber-950/40 border-amber-500/50" : "bg-slate-800/60 border-slate-700/60"}`;
+                    row.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 text-center font-bold ${idx < 3 ? "text-base" : "text-slate-400 text-sm"}">${rankIcon}</span>
+                            <div>
+                                <p class="font-bold text-slate-100 text-sm md:text-base">${item.player_name}</p>
+                                <p class="text-xs text-slate-400">Lv. ${item.level} • ${item.realm_reached || "Adventure"}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-black text-amber-400 text-sm md:text-base">${(item.score || 0).toLocaleString()} pts</p>
+                            <p class="text-[10px] text-slate-500">${new Date(item.created_at).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                    listEl.appendChild(row);
+                });
+                return;
+            }
+        }
+        // Fallback to local if cloud empty or offline
+        this.renderLeaderboard();
+    }
+
     startSurvival() {
         window.soundManager.playClick();
         this.mode = "survival";
@@ -570,11 +644,12 @@ class NumberQuestGame {
 
     saveScoreToLeaderboard() {
         if (this.score <= 0) return;
+        const realmName = this.mode === "survival" ? "Survival" : (this.mode === "multiplayer" ? "Multiplayer Duel" : (REALMS_DATA.find(r => r.id === this.currentRealm)?.title || "Isle"));
         const entry = {
             name: this.playerName,
             score: this.score,
             level: this.level,
-            realm: this.mode === "survival" ? "Survival" : (REALMS_DATA.find(r => r.id === this.currentRealm)?.title || "Isle"),
+            realm: realmName,
             date: new Date().toISOString().split("T")[0]
         };
 
@@ -582,6 +657,12 @@ class NumberQuestGame {
         this.leaderboard.sort((a, b) => b.score - a.score);
         this.leaderboard = this.leaderboard.slice(0, 10); // Keep top 10
         localStorage.setItem("nq_leaderboard", JSON.stringify(this.leaderboard));
+
+        // Save to Supabase Cloud Leaderboard
+        if (window.multiplayerManager) {
+            window.multiplayerManager.saveGlobalScore(this.playerName, this.score, this.level, 100, realmName);
+        }
+
         this.renderLeaderboard();
     }
 
@@ -878,6 +959,32 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 window.game.showScreen("screen-home");
             }
+        });
+    }
+
+
+    // Multiplayer Card button in Home
+    const btnPlayMultiplayer = document.getElementById("btn-play-multiplayer");
+    if (btnPlayMultiplayer) {
+        btnPlayMultiplayer.addEventListener("click", () => {
+            if (window.multiplayerManager) window.multiplayerManager.openModal();
+        });
+    }
+
+    // Leaderboard Tabs (Cloud vs Local)
+    const tabLbCloud = document.getElementById("tab-lb-cloud");
+    const tabLbLocal = document.getElementById("tab-lb-local");
+    if (tabLbCloud && tabLbLocal) {
+        tabLbCloud.addEventListener("click", () => {
+            tabLbCloud.className = "flex-1 py-1.5 rounded-lg bg-indigo-600 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5";
+            tabLbLocal.className = "flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5";
+            if (window.game) window.game.loadCloudLeaderboard();
+        });
+
+        tabLbLocal.addEventListener("click", () => {
+            tabLbLocal.className = "flex-1 py-1.5 rounded-lg bg-indigo-600 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5";
+            tabLbCloud.className = "flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5";
+            if (window.game) window.game.renderLeaderboard();
         });
     }
 

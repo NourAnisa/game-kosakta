@@ -109,3 +109,43 @@ Agar game ini dapat diakses secara publik oleh seluruh siswa melalui tautan web:
 ## 👩‍🏫 Lisensi & Peruntukan Edukasi
 
 Dikembangkan oleh **Ir. Nor Anisa, S.Kom., M.Kom.** untuk mendukung transformasi media pembelajaran digital interaktif, peningkatan literasi numerasi dalam bahasa Inggris, serta akreditasi pembelajaran berbasis teknologi (APT Kriteria 2).
+
+
+---
+
+## ⚡ Arsitektur Multiplayer & Database Cloud (Supabase Realtime)
+
+Game ini kini telah terintegrasi dengan **Supabase Cloud PostgreSQL & Realtime Engine** (Region: Singapore / `ap-southeast-1`):
+
+### 1. Struktur Database Supabase
+
+1. **`game_rooms`**
+   - `id`: UUID (Primary Key)
+   - `room_code`: VARCHAR(10) (Kode unik room kelas, e.g. `EDU88`)
+   - `host_name`: VARCHAR(100) (Nama Guru / Host pembuat room)
+   - `status`: `waiting`, `playing`, `finished`
+   - `realm`: Tema pulau soal
+   - `created_at` & `updated_at`: Timestamp
+
+2. **`room_players`**
+   - `id`: UUID (Primary Key)
+   - `room_code`: Relasi ke `game_rooms(room_code)` (Cascade Delete)
+   - `player_name`: Nama siswa
+   - `is_host`: Boolean (Penanda host)
+   - `score`: Live score siswa saat ini
+   - `combo`: Streak combo aktif
+   - `lives`: Sisa nyawa (3 hearts)
+   - `last_active`: Heartbeat timestamp
+
+3. **`leaderboard`**
+   - `id`: UUID (Primary Key)
+   - `player_name`: Nama petualang
+   - `score`: Skor tertinggi
+   - `level`: Level yang dicapai (1 - 10)
+   - `accuracy`: Persentase ketepatan jawaban
+   - `realm_reached`: Pulau terakhir yang diselesaikan
+
+### 2. Cara Kerja Realtime Sinkronisasi di GitHub Pages
+- **Client-Side SDK:** Menghubungkan browser siswa dan guru secara langsung ke WebSocket Supabase Realtime (`@supabase/supabase-js`).
+- **Postgres Replication:** Setiap kali siswa menjawab atau skor berubah, event dipancarkan otomatis ke seluruh pemain dalam room dalam waktu <100ms.
+- **Zero Backend Maintenance:** 100% serverless, berjalan mulus langsung di atas GitHub Pages tanpa memerlukan sewa server VM.

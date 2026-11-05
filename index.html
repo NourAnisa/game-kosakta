@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NumberQuest: English Math Learning Adventure (Gamifikasi Siswa SMP)</title>
+    <!-- Supabase Realtime Client SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -51,6 +53,11 @@
                     <span class="text-[10px] text-slate-400">✏️</span>
                 </button>
 
+                                <!-- Multiplayer Duel Button -->
+                <button id="btn-open-multiplayer" title="Buka Mode Multiplayer Realtime" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 border border-pink-400/40 text-xs text-white font-bold transition-all shadow-md shadow-pink-900/30">
+                    <span>⚔️</span>
+                    <span class="hidden sm:inline">Duel Live</span>
+                </button>
                 <!-- Sound Toggle Button -->
                 <button id="btn-toggle-sound" title="Toggle Suara Game" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-indigo-600/80 border border-slate-700 text-sm flex items-center justify-center transition-colors">
                     🔊
@@ -80,7 +87,7 @@
             </div>
 
             <!-- Mode Selection Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto">
                 <!-- Adventure Mode Card -->
                 <div class="glass-panel p-6 rounded-3xl border border-indigo-500/40 hover:border-indigo-400 transition-all transform hover:-translate-y-1 shadow-xl shadow-indigo-950/30 flex flex-col justify-between">
                     <div>
@@ -116,9 +123,28 @@
                         <span>🔥</span>
                     </button>
                 </div>
+                            <!-- Multiplayer Arena Card -->
+                <div class="glass-panel p-6 rounded-3xl border border-pink-500/40 hover:border-pink-400 transition-all transform hover:-translate-y-1 shadow-xl shadow-pink-950/30 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-4xl p-3 rounded-2xl bg-pink-500/20 border border-pink-500/30">⚔️</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-pink-500/20 text-pink-300 border border-pink-500/30 flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Supabase Live
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-black text-white mb-2">Multiplayer Duel</h3>
+                        <p class="text-xs md:text-sm text-slate-300 leading-relaxed mb-6">
+                            Bertanding real-time dengan teman sekelas! Guru/Host membuat room kode, skor live tersinkron otomatis via Supabase Realtime.
+                        </p>
+                    </div>
+                    <button id="btn-play-multiplayer" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 font-bold text-white text-sm md:text-base transition-all shadow-lg shadow-pink-600/30 active:scale-95 flex items-center justify-center gap-2">
+                        <span>Masuk Room Kelas</span>
+                        <span>🚀</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Hub Shortcuts (Leaderboard & Badges) -->
+<!-- Hub Shortcuts (Leaderboard & Badges) -->
             <div class="flex flex-wrap items-center justify-center gap-4 max-w-lg mx-auto pt-2">
                 <button id="btn-open-leaderboard" class="px-5 py-2.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 font-semibold text-xs md:text-sm text-slate-200 flex items-center gap-2 transition-all">
                     <span>🏆</span>
@@ -135,6 +161,17 @@
         <!-- SCREEN 2: GAMEPLAY ARENA                   -->
         <!-- ========================================== -->
         <section id="screen-game" class="hidden space-y-6 my-auto">
+                        <!-- Live Multiplayer Bar (Only shown during multiplayer) -->
+            <div id="multiplayer-live-bar" class="hidden glass-panel px-4 py-2.5 rounded-2xl border border-pink-500/40 bg-pink-950/30 flex items-center justify-between gap-3 overflow-x-auto">
+                <div class="flex items-center gap-2 text-xs font-bold text-pink-300 flex-shrink-0">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>LIVE DUEL:</span>
+                </div>
+                <div id="multiplayer-live-bar-content" class="flex items-center gap-2 flex-wrap">
+                    <!-- Realtime rivals injected here -->
+                </div>
+            </div>
+
             <!-- Game HUD Bar -->
             <div class="glass-panel p-4 md:p-5 rounded-2xl border border-slate-700/80 shadow-lg space-y-4">
                 <div class="flex items-center justify-between flex-wrap gap-3">
@@ -288,6 +325,18 @@
                 <button class="modal-close-btn text-2xl text-slate-400 hover:text-white">&times;</button>
             </div>
 
+                        <!-- Tabs: Cloud vs Local -->
+            <div class="flex items-center gap-2 p-1 rounded-xl bg-slate-800/80 border border-slate-700/60">
+                <button id="tab-lb-cloud" class="flex-1 py-1.5 rounded-lg bg-indigo-600 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5">
+                    <span>☁️</span>
+                    <span>Cloud Global (Supabase)</span>
+                </button>
+                <button id="tab-lb-local" class="flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5">
+                    <span>💾</span>
+                    <span>Lokal</span>
+                </button>
+            </div>
+
             <!-- Leaderboard List -->
             <div id="leaderboard-list" class="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
                 <!-- Injected by game.js -->
@@ -364,6 +413,101 @@
         </div>
     </div>
 
+        <!-- ========================================== -->
+    <!-- MODAL 7: MULTIPLAYER & CLOUD ROOM          -->
+    <!-- ========================================== -->
+    <div id="multiplayer-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl border border-pink-500/50 max-w-lg w-full space-y-6 shadow-2xl relative">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-slate-700/80 pb-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl p-2 rounded-2xl bg-pink-500/20 border border-pink-500/30">⚔️</span>
+                    <div>
+                        <h3 class="text-xl font-black text-white">Multiplayer Classroom Duel</h3>
+                        <p class="text-xs text-pink-300 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Powered by Supabase Realtime
+                        </p>
+                    </div>
+                </div>
+                <button id="btn-close-multiplayer" class="modal-close-btn text-2xl text-slate-400 hover:text-white">&times;</button>
+            </div>
+
+            <!-- View 1: Lobby View (Create or Join) -->
+            <div id="mp-view-lobby" class="space-y-6">
+                <!-- Create Room Box -->
+                <div class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3">
+                    <div class="font-bold text-sm text-slate-100 flex items-center gap-2">
+                        <span>👑</span>
+                        <span>Mode Guru / Host: Buat Ruangan Baru</span>
+                    </div>
+                    <p class="text-xs text-slate-400">
+                        Buat Room permainan baru dan bagikan kode 5 huruf ke seluruh siswa di kelas.
+                    </p>
+                    <button id="btn-mp-create" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold text-white text-xs md:text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2">
+                        <span>Buat Room Sekarang (Create Room)</span>
+                        <span>✨</span>
+                    </button>
+                </div>
+
+                <!-- Divider -->
+                <div class="flex items-center gap-3">
+                    <div class="h-px bg-slate-700 flex-1"></div>
+                    <span class="text-[11px] text-slate-400 uppercase tracking-widest font-bold">Atau Gabung</span>
+                    <div class="h-px bg-slate-700 flex-1"></div>
+                </div>
+
+                <!-- Join Room Box -->
+                <div class="p-5 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-3">
+                    <div class="font-bold text-sm text-slate-100 flex items-center gap-2">
+                        <span>🎮</span>
+                        <span>Mode Siswa: Masukkan Kode Room</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <input id="input-mp-code" type="text" maxlength="6" placeholder="Contoh: EDU77" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-100 text-sm uppercase tracking-wider font-bold focus:border-pink-500 focus:outline-none">
+                        <button id="btn-mp-join" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 font-bold text-white text-xs md:text-sm shadow-md transition-all active:scale-95">
+                            Gabung
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 2: Room View (Waiting for match start) -->
+            <div id="mp-view-room" class="hidden space-y-6">
+                <!-- Room Info Card -->
+                <div class="text-center p-4 rounded-2xl bg-gradient-to-br from-indigo-950/60 to-purple-950/60 border border-indigo-500/40 space-y-2">
+                    <span class="text-xs text-indigo-300 font-semibold uppercase tracking-wider">Kode Ruangan Kelas:</span>
+                    <div id="lbl-mp-room-code" class="text-4xl md:text-5xl font-black text-amber-400 tracking-widest font-mono">
+                        EDU00
+                    </div>
+                    <p class="text-[11px] text-slate-400">Bagikan kode di atas kepada teman / siswa untuk bertanding.</p>
+                </div>
+
+                <!-- Player List in Room -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-xs text-slate-400 font-semibold px-1">
+                        <span id="mp-status-text">1 Pemain Terhubung</span>
+                        <span class="text-emerald-400">● Live Sync</span>
+                    </div>
+                    <div id="mp-players-list" class="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
+                        <!-- Injected live by multiplayer.js -->
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex items-center gap-3 pt-2">
+                    <button id="btn-mp-leave" class="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 font-bold text-xs text-slate-300 transition-all">
+                        Keluar
+                    </button>
+                    <button id="btn-mp-start" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 font-bold text-xs md:text-sm text-white shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                        <span>Mulai Game!</span>
+                        <span>🚀</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-800/60">
         <p>NumberQuest • Game Interaktif Gamifikasi Belajar Bahasa Inggris Berhitung untuk Siswa SMP</p>
@@ -373,6 +517,8 @@
     <!-- Scripts -->
     <script src="js/audio.js"></script>
     <script src="js/speech.js"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/multiplayer.js"></script>
     <script src="js/questions.js"></script>
     <script src="js/game.js"></script>
 </body>
