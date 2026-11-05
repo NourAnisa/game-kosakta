@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NumberQuest: English Math Learning Adventure (Gamifikasi Siswa SMP)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            900: '#090d16',
+                            800: '#0f172a',
+                            700: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-dark-900 text-slate-100 flex flex-col min-h-screen select-none antialiased">
+
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-40 w-full glass-panel border-b border-indigo-500/20 px-4 py-3 md:px-8">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl md:text-3xl animate-bounce">⚔️</span>
+                <div>
+                    <h1 class="text-base md:text-xl font-black tracking-tight bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-400 bg-clip-text text-transparent">
+                        NumberQuest
+                    </h1>
+                    <p class="text-[10px] md:text-xs text-indigo-300/80 font-medium">English Math Adventure • Siswa SMP</p>
+                </div>
+            </div>
+
+            <!-- Quick Player Status & Tools -->
+            <div class="flex items-center gap-2 md:gap-4">
+                <!-- Player Name Pill -->
+                <button id="btn-edit-name" title="Klik untuk ganti nama" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs text-slate-200 transition-colors">
+                    <span class="text-amber-400">👤</span>
+                    <span id="player-name-display" class="font-bold truncate max-w-[90px] md:max-w-[130px]">Adventurer</span>
+                    <span class="text-[10px] text-slate-400">✏️</span>
+                </button>
+
+                <!-- Sound Toggle Button -->
+                <button id="btn-toggle-sound" title="Toggle Suara Game" class="w-9 h-9 rounded-xl bg-slate-800/80 hover:bg-indigo-600/80 border border-slate-700 text-sm flex items-center justify-center transition-colors">
+                    🔊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 flex flex-col justify-center max-w-5xl w-full mx-auto p-4 md:p-8">
+
+        <!-- ========================================== -->
+        <!-- SCREEN 1: HOME & HUB SCREEN                -->
+        <!-- ========================================== -->
+        <section id="screen-home" class="space-y-8 my-auto">
+            <!-- Hero Banner -->
+            <div class="text-center space-y-4 max-w-3xl mx-auto pt-4">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs md:text-sm font-semibold mb-2">
+                    <span>✨ Gamifikasi Pembelajaran Bahasa Inggris Berhitung</span>
+                </div>
+                <h2 class="text-3xl md:text-5xl font-black tracking-tight leading-tight md:leading-none">
+                    Kuasai Angka & Hitungan Inggris Lewat <span class="bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 bg-clip-text text-transparent">Petualangan Epik!</span>
+                </h2>
+                <p class="text-sm md:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                    Uji pemahaman bahasa Inggrismu mulai dari angka cardinal/ordinal, operasi matematika (plus, minus, times, divided by), pecahan, desimal, hingga soal cerita SMP!
+                </p>
+            </div>
+
+            <!-- Mode Selection Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+                <!-- Adventure Mode Card -->
+                <div class="glass-panel p-6 rounded-3xl border border-indigo-500/40 hover:border-indigo-400 transition-all transform hover:-translate-y-1 shadow-xl shadow-indigo-950/30 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-4xl p-3 rounded-2xl bg-indigo-500/20 border border-indigo-500/30">🗺️</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">5 Realms</span>
+                        </div>
+                        <h3 class="text-xl font-black text-white mb-2">Adventure Mode</h3>
+                        <p class="text-xs md:text-sm text-slate-300 leading-relaxed mb-6">
+                            Jelajahi 5 pulau bertema mulai dari ejaan angka dasar, operasi hitung, pecahan, hingga teka-teki cerita matematika.
+                        </p>
+                    </div>
+                    <button id="btn-play-adventure" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold text-white text-sm md:text-base transition-all shadow-lg shadow-indigo-600/30 active:scale-95 flex items-center justify-center gap-2">
+                        <span>Mulai Petualangan</span>
+                        <span>➔</span>
+                    </button>
+                </div>
+
+                <!-- Survival Arena Card -->
+                <div class="glass-panel p-6 rounded-3xl border border-rose-500/40 hover:border-rose-400 transition-all transform hover:-translate-y-1 shadow-xl shadow-rose-950/30 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-4xl p-3 rounded-2xl bg-rose-500/20 border border-rose-500/30">⚡</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">Endless Waves</span>
+                        </div>
+                        <h3 class="text-xl font-black text-white mb-2">Survival Arena</h3>
+                        <p class="text-xs md:text-sm text-slate-300 leading-relaxed mb-6">
+                            Tantangan tanpa henti dengan batas waktu cepat dan 3 nyawa. Kumpulkan kombo skor setinggi mungkin untuk memuncaki papan peringkat!
+                        </p>
+                    </div>
+                    <button id="btn-play-survival" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 font-bold text-white text-sm md:text-base transition-all shadow-lg shadow-rose-600/30 active:scale-95 flex items-center justify-center gap-2">
+                        <span>Tantang Survival</span>
+                        <span>🔥</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hub Shortcuts (Leaderboard & Badges) -->
+            <div class="flex flex-wrap items-center justify-center gap-4 max-w-lg mx-auto pt-2">
+                <button id="btn-open-leaderboard" class="px-5 py-2.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 font-semibold text-xs md:text-sm text-slate-200 flex items-center gap-2 transition-all">
+                    <span>🏆</span>
+                    <span>Papan Peringkat (Leaderboard)</span>
+                </button>
+                <button id="btn-open-badges" class="px-5 py-2.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 font-semibold text-xs md:text-sm text-slate-200 flex items-center gap-2 transition-all">
+                    <span>🎖️</span>
+                    <span>Badge Pencapaian (<span id="hud-badge-count">0/8</span>)</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SCREEN 2: GAMEPLAY ARENA                   -->
+        <!-- ========================================== -->
+        <section id="screen-game" class="hidden space-y-6 my-auto">
+            <!-- Game HUD Bar -->
+            <div class="glass-panel p-4 md:p-5 rounded-2xl border border-slate-700/80 shadow-lg space-y-4">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <!-- Realm Info -->
+                    <div class="flex items-center gap-3">
+                        <span id="game-realm-icon" class="text-2xl md:text-3xl">🏝️</span>
+                        <div>
+                            <span id="q-counter" class="text-[10px] uppercase font-bold tracking-wider text-indigo-400">Quest 1 of 8</span>
+                            <h3 id="game-realm-title" class="text-sm md:text-base font-extrabold text-white">The Isle of Numbers</h3>
+                        </div>
+                    </div>
+
+                    <!-- Lives & Streak -->
+                    <div class="flex items-center gap-4">
+                        <div id="hud-streak" class="hidden px-2.5 py-1 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+                            🔥 2x Combo!
+                        </div>
+                        <div class="flex items-center gap-1.5" id="hud-lives">
+                            <!-- Injected by game.js (3 Hearts) -->
+                        </div>
+                        <button id="btn-quit-game" title="Kembali ke Menu" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-400 hover:text-white transition-colors">
+                            Keluar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Bar (Level, XP, Score, Timer) -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-slate-800 text-xs font-mono">
+                    <div class="flex flex-col">
+                        <span class="text-slate-400 text-[10px] uppercase">Level & Title</span>
+                        <span class="font-bold text-slate-100"><span id="hud-level">Lv. 1</span> • <span id="hud-level-title" class="text-indigo-300 font-sans">Novice</span></span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-slate-400 text-[10px] uppercase">Total XP</span>
+                        <span id="hud-xp" class="font-bold text-indigo-300">0 XP</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-slate-400 text-[10px] uppercase">Current Score</span>
+                        <span id="hud-score" class="font-black text-amber-400 text-sm">0</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-slate-400 text-[10px] uppercase">Time Remaining</span>
+                        <span class="font-black text-rose-400"><span id="hud-timer-sec">20</span> detik</span>
+                    </div>
+                </div>
+
+                <!-- Dual Progress Bars: XP & Timer -->
+                <div class="space-y-1.5 pt-1">
+                    <!-- XP Bar -->
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div id="hud-xp-bar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full w-0 transition-all duration-300"></div>
+                    </div>
+                    <!-- Timer Bar -->
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="hud-timer-bar" class="bg-emerald-500 h-full w-full transition-all duration-200"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="glass-panel p-6 md:p-8 rounded-3xl border border-indigo-500/30 shadow-2xl relative">
+                <!-- Category badge & Audio Button -->
+                <div class="flex items-center justify-between mb-4">
+                    <span id="q-category" class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                        Category
+                    </span>
+                    <button id="btn-question-audio" title="Dengarkan Pengucapan Bahasa Inggris (TTS)" class="px-3 py-1 rounded-xl bg-indigo-600/30 hover:bg-indigo-600 border border-indigo-500/40 text-xs font-semibold text-indigo-200 flex items-center gap-1.5 transition-all">
+                        <span>🔊</span>
+                        <span>Dengarkan Soal</span>
+                    </button>
+                </div>
+
+                <!-- Question English Text -->
+                <h2 id="q-text" class="text-xl md:text-2xl font-black text-white leading-snug mb-3">
+                    Loading Quest...
+                </h2>
+
+                <!-- Indonesian Clue Pill -->
+                <div class="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-xs text-slate-300 flex items-start gap-2 mb-6">
+                    <span class="text-amber-400 text-sm">💡</span>
+                    <span id="q-clue" class="leading-relaxed">Petunjuk...</span>
+                </div>
+
+                <!-- 4 Options Grid -->
+                <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Injected dynamically by game.js -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================== -->
+    <!-- MODAL 1: EDUCATIONAL FEEDBACK DRAWER/MODAL -->
+    <!-- ========================================== -->
+    <div id="feedback-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl border border-indigo-500/40 max-w-lg w-full space-y-5 shadow-2xl">
+            <div class="flex items-center gap-3">
+                <span id="fb-icon" class="text-3xl">🎉</span>
+                <h3 id="fb-title" class="text-xl md:text-2xl font-black">Feedback</h3>
+            </div>
+
+            <!-- Key Answer & Score Feedback -->
+            <div id="fb-body"></div>
+
+            <!-- Detailed Explanation & Audio -->
+            <div id="fb-explanation"></div>
+
+            <!-- Action Button -->
+            <button id="fb-next-btn" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold text-white text-base shadow-lg shadow-indigo-600/30 transition-all active:scale-95 flex items-center justify-center gap-2">
+                <span>Lanjut Quest Berikutnya</span>
+                <span class="text-xs font-mono text-indigo-200">(Tekan Spasi)</span>
+                <span>➔</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: MAP / REALM SELECTOR              -->
+    <!-- ========================================== -->
+    <div id="map-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl border border-indigo-500/40 max-w-2xl w-full space-y-6 my-auto shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-2xl font-black text-white">Peta Petualangan Numera</h3>
+                    <p class="text-xs md:text-sm text-slate-400">Pilih Realm yang telah kamu buka untuk memulai quest</p>
+                </div>
+                <button class="modal-close-btn text-2xl text-slate-400 hover:text-white">&times;</button>
+            </div>
+
+            <!-- Realms Grid -->
+            <div id="map-realms-container" class="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
+                <!-- Injected by game.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 3: LEADERBOARD                       -->
+    <!-- ========================================== -->
+    <div id="leaderboard-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl border border-amber-500/40 max-w-md w-full space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">🏆</span>
+                    <div>
+                        <h3 class="text-xl font-black text-white">Papan Peringkat</h3>
+                        <p class="text-xs text-slate-400">Top 10 Petualang Matematika Terbaik</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn text-2xl text-slate-400 hover:text-white">&times;</button>
+            </div>
+
+            <!-- Leaderboard List -->
+            <div id="leaderboard-list" class="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
+                <!-- Injected by game.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 4: ACHIEVEMENTS / BADGES             -->
+    <!-- ========================================== -->
+    <div id="achievements-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl border border-indigo-500/40 max-w-lg w-full space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">🎖️</span>
+                    <div>
+                        <h3 class="text-xl font-black text-white">Badge Pencapaian</h3>
+                        <p class="text-xs text-slate-400">Koleksi prestasi selama belajar berhitung</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn text-2xl text-slate-400 hover:text-white">&times;</button>
+            </div>
+
+            <!-- Grid -->
+            <div id="achievements-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[55vh] overflow-y-auto pr-1">
+                <!-- Injected by game.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 5: VICTORY / REALM CLEAR             -->
+    <!-- ========================================== -->
+    <div id="victory-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl border border-emerald-500/60 max-w-md w-full text-center space-y-5 shadow-2xl">
+            <div class="text-5xl">👑</div>
+            <h3 id="vic-title" class="text-2xl font-black text-emerald-400">Realm Cleared!</h3>
+            <p id="vic-desc" class="text-sm text-slate-300 leading-relaxed">
+                Hebat! Kamu telah menyelesaikan realm ini dengan sangat baik.
+            </p>
+            <button id="btn-victory-next" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 font-bold text-white shadow-lg shadow-emerald-500/30 transition-all active:scale-95">
+                Lanjut ke Realm Berikutnya ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 6: GAME OVER                         -->
+    <!-- ========================================== -->
+    <div id="gameover-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-panel p-6 md:p-8 rounded-3xl border border-rose-500/60 max-w-md w-full text-center space-y-5 shadow-2xl">
+            <div class="text-5xl">💔</div>
+            <h3 class="text-2xl font-black text-rose-400">Nyawa Habis!</h3>
+            <p id="go-reason" class="text-xs text-rose-300 font-semibold"></p>
+            
+            <div class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/80 space-y-2 text-left font-mono text-sm">
+                <div class="flex justify-between">
+                    <span class="text-slate-400 font-sans">Skor Akhir:</span>
+                    <span id="go-score" class="font-bold text-amber-400">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400 font-sans">Level Dicapai:</span>
+                    <span id="go-level" class="font-bold text-indigo-300">Level 1</span>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-400">
+                "Kegagalan adalah langkah pertama untuk menjadi ahli. Ayo coba lagi!"
+            </p>
+
+            <button id="btn-retry-game" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 font-bold text-white shadow-lg shadow-rose-600/30 transition-all active:scale-95">
+                Coba Lagi (Retry) 🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-slate-500 border-t border-slate-800/60">
+        <p>NumberQuest • Game Interaktif Gamifikasi Belajar Bahasa Inggris Berhitung untuk Siswa SMP</p>
+        <p class="mt-1 text-[11px] text-slate-600">Dibuat dengan ❤️ untuk pembelajaran interaktif digital</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/audio.js"></script>
+    <script src="js/speech.js"></script>
+    <script src="js/questions.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
